@@ -2,24 +2,28 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type game struct {
-	width, height int
+type Game struct {
 	*tree
+	width, height int
 }
 
-func NewGame(width, height int) *game {
-	return &game{width, height, newTree()}
+func NewGame(width, height int) *Game {
+	return &Game{
+		tree:   newTree(),
+		width:  width,
+		height: height,
+	}
 }
 
-func (g *game) Draw(screen *ebiten.Image) {
-	g.tree.draw(screen)
-}
-
-func (g *game) Update() error {
+func (g Game) Update() error {
 	g.tree.update()
 	return nil
 }
 
-func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.width, g.height
+func (g Game) Draw(screen *ebiten.Image) {
+	g.tree.draw(screen)
+}
+
+func (g Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return outsideWidth, outsideHeight
 }
