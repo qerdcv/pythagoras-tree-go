@@ -9,16 +9,22 @@ import (
 )
 
 const (
-	leftRot  = -1
-	rightRot = 1
-
 	maxNesting = 5
+
+	initSize = 200
+	initRot  = -135
 )
 
 var (
-	treeColor = color.RGBA{
+	leftBranchColor = color.RGBA{
 		R: 9,
 		G: 255,
+		B: 9,
+		A: 255,
+	}
+	rightBranchColor = color.RGBA{
+		R: 255,
+		G: 9,
 		B: 9,
 		A: 255,
 	}
@@ -43,23 +49,54 @@ func (t *tree) update() {
 }
 
 func (t *tree) draw(screen *ebiten.Image) {
-	drawTree(screen, float64(screenWidth/2), screenHeight, screenHeight/2, 0, leftRot)
+	x1 := float64(screenWidth / 2)
+	y1 := float64(screenHeight)
+
+	x2 := x1
+	y2 := y1 - initSize
+
+	ebitenutil.DrawLine(screen, x1, y1, x2, y2, leftBranchColor)
+
+	drawLeftBranch(screen, x2, y2, screenHeight/2, 0, initRot)
+	// drawRightBranch(screen, x2, y2, screenHeight/2, 0, initRot)
 }
 
-func drawTree(screen *ebiten.Image, x1, y1, h, n, rot float64) {
+func drawLeftBranch(screen *ebiten.Image, x1, y1, h, n, rotDeg float64) {
 	if n == maxNesting {
 		return
 	}
 
 	h /= 2
-	x2 := h + h*math.Cos(degToRad(45)*n*rot)
-	y2 := h + h*math.Sin(degToRad(45)*n*rot)
 
-	ebitenutil.DrawLine(screen, x1, y1, x2, y2, treeColor)
+	dx := h * math.Cos(degToRad(rotDeg))
+	dy := h * math.Sin(degToRad(rotDeg))
 
-	n += 1
+	x2 := x1 + dx
+	y2 := y1 + dy
 
-	drawTree(screen, x2, y2, h, n, rot)
+	ebitenutil.DrawLine(screen, x1, y1, x2, y2, leftBranchColor)
+
+	drawLeftBranch(screen, x2, y2, h, n+1, rotDeg-45)
+	drawRightBranch(screen, x2, y2, h, n, rotDeg)
+}
+
+func drawRightBranch(screen *ebiten.Image, x1, y1, h, n, rotDeg float64) {
+	if n == maxNesting {
+		return
+	}
+
+	h /= 2
+
+	dx := h * math.Cos(degToRad(rotDeg))
+	dy := h * math.Sin(degToRad(rotDeg))
+
+	x2 := x1 - dx
+	y2 := y1 + dy
+
+	ebitenutil.DrawLine(screen, x1, y1, x2, y2, rightBranchColor)
+
+	drawLeftBranch(screen, x2, y2, h, n+1, rotDeg+45)
+	drawRightBranch(screen, x2, y2, h, n+1, rotDeg-45)
 }
 
 func degToRad(deg float64) float64 {
