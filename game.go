@@ -1,37 +1,46 @@
 package main
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
+import "github.com/hajimehoshi/ebiten/v2"
+
+const (
+	screenWidht  = 640
+	screenHeight = 480
 )
 
-type Game struct {
-	*tree
-	*rotatingLine
-	width, height float64
+type game struct {
+	width  int
+	height int
+	title  string
+
+	tree *tree
 }
 
-func NewGame(width, height float64) *Game {
-	return &Game{
-		tree:         newTree(),
-		rotatingLine: newRotatingLine(width/2, height/2),
-		width:        width,
-		height:       height,
+func newGame() *game {
+	return &game{
+		width:  screenWidht,
+		height: screenHeight,
+		title:  "Pythogoras tree",
+
+		tree: newTree(screenWidht, screenHeight),
 	}
 }
 
-func (g Game) Update() error {
-	g.tree.update()
-	// g.rotatingLine.update()
+func (g *game) Update() error {
 	return nil
 }
 
-func (g Game) Draw(screen *ebiten.Image) {
-
-	// g.rotatingLine.d
-	// raw(screen)
-	g.tree.draw(screen)
+func (g *game) Draw(screen *ebiten.Image) {
+	g.tree.Draw(screen)
 }
 
-func (g Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return outsideWidth, outsideHeight
+func (g *game) Layout(outsizeWidth, outsideHeight int) (int, int) {
+	return outsizeWidth, outsideHeight
+}
+
+func (g *game) Run() error {
+	ebiten.SetWindowSize(g.width, g.height)
+	ebiten.SetWindowTitle(g.title)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeDisabled)
+
+	return ebiten.RunGame(g)
 }

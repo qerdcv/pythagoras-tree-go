@@ -2,103 +2,76 @@ package main
 
 import (
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 const (
-	maxNesting = 5
-
-	initSize = 200
-	initRot  = -135
+	initHeight = 200
+	nesting    = 10
+	delta      = 0.67
+	rotDeg     = 45
 )
 
 var (
-	leftBranchColor = color.RGBA{
-		R: 9,
+	treeColor = color.RGBA{
+		R: 0,
 		G: 255,
-		B: 9,
+		B: 0,
 		A: 255,
 	}
-	rightBranchColor = color.RGBA{
-		R: 255,
-		G: 9,
-		B: 9,
-		A: 255,
-	}
-
-	isCalculated = false
 )
 
 type tree struct {
+	rx, ry float64
 }
 
-func newTree() *tree {
-	return &tree{}
+func newTree(screenWidht, screenHeight int) *tree {
+	return &tree{
+		float64(screenWidht) / 2,
+		float64(screenHeight),
+	}
 }
 
-func (t *tree) update() {
-	if isCalculated {
+func (t *tree) generateTree(screen *ebiten.Image, n, sx, sy, h float64) {
+	t.generateLeftBranch(screen, n, -rotDeg, sx, sy, h)
+	t.generateRightBranch(screen, n, rotDeg, sx, sy, h)
+}
+
+func (t *tree) generateLeftBranch(screen *ebiten.Image, n, deg, sx, sy, h float64) {
+	if n >= nesting {
 		return
 	}
 
-	isCalculated = true
+	lb := line{sx, sy, sx, sy - h, h}
+	lb.rotate(deg)
+	lb.draw(screen)
 
+	h *= delta
+
+	n++
+	t.generateLeftBranch(screen, n, deg-rotDeg, lb.x2, lb.y2, h)
+	t.generateRightBranch(screen, n, deg+rotDeg, lb.x2, lb.y2, h)
 }
 
-func (t *tree) draw(screen *ebiten.Image) {
-	x1 := float64(screenWidth / 2)
-	y1 := float64(screenHeight)
-
-	x2 := x1
-	y2 := y1 - initSize
-
-	ebitenutil.DrawLine(screen, x1, y1, x2, y2, leftBranchColor)
-
-	drawLeftBranch(screen, x2, y2, screenHeight/2, 0, initRot)
-	// drawRightBranch(screen, x2, y2, screenHeight/2, 0, initRot)
-}
-
-func drawLeftBranch(screen *ebiten.Image, x1, y1, h, n, rotDeg float64) {
-	if n == maxNesting {
+func (t *tree) generateRightBranch(screen *ebiten.Image, n, deg, sx, sy, h float64) {
+	if n >= nesting {
 		return
 	}
 
-	h /= 2
+	rb := line{sx, sy, sx, sy - h, h}
+	rb.rotate(deg)
+	rb.draw(screen)
 
-	dx := h * math.Cos(degToRad(rotDeg))
-	dy := h * math.Sin(degToRad(rotDeg))
+	h *= delta
 
-	x2 := x1 + dx
-	y2 := y1 + dy
-
-	ebitenutil.DrawLine(screen, x1, y1, x2, y2, leftBranchColor)
-
-	drawLeftBranch(screen, x2, y2, h, n+1, rotDeg-45)
-	drawRightBranch(screen, x2, y2, h, n, rotDeg)
+	n++
+	t.generateRightBranch(screen, n, deg+rotDeg, rb.x2, rb.y2, h)
+	t.generateLeftBranch(screen, n, deg-rotDeg, rb.x2, rb.y2, h)
 }
 
-func drawRightBranch(screen *ebiten.Image, x1, y1, h, n, rotDeg float64) {
-	if n == maxNesting {
-		return
-	}
-
-	h /= 2
-
-	dx := h * math.Cos(degToRad(rotDeg))
-	dy := h * math.Sin(degToRad(rotDeg))
-
-	x2 := x1 - dx
-	y2 := y1 + dy
-
-	ebitenutil.DrawLine(screen, x1, y1, x2, y2, rightBranchColor)
-
-	drawLeftBranch(screen, x2, y2, h, n+1, rotDeg+45)
-	drawRightBranch(screen, x2, y2, h, n+1, rotDeg-45)
-}
-
-func degToRad(deg float64) float64 {
-	return (deg * math.Pi) / 180
+func (t *tree) Draw(screen *ebiten.Image) {
+	root := line{t.rx, t.ry, t.rx, t.ry - initHeight, initHeight}
+	root.draw(screen)
+	t.generateTree(screen, 1, root.x2, root.y2, initHeight/2)
 }
