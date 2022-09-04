@@ -10,7 +10,7 @@ const (
 	initHeight = 200
 	nesting    = 10
 	delta      = 0.67
-	rotDeg     = 45
+	rotDeg     = 125
 )
 
 var (
